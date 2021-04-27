@@ -74,3 +74,25 @@ RUN { \
 		echo 'ignore_repeated_source = Off'; \
 		echo 'html_errors = Off'; \
 	} > /usr/local/etc/php/conf.d/error-logging.ini
+
+ENV WP_CLI_URL=https://github.com/wp-cli/wp-cli/releases/download/v2.4.0/wp-cli-2.4.0.phar
+ENV WP_CLI_MD5=dedd5a662b80cda66e9e25d44c23b25c
+
+RUN { \
+  set -e ; \
+  sed -iEe '/^www-data:/{s,/sbin/nologin,/bin/sh,}' /etc/passwd* ; \
+  mkdir /usr/local/share/wp-cli/ ; \
+  curl -L -o /usr/local/share/wp-cli/wp-cli.phar "${WP_CLI_URL}" ; \
+  if [[ "$(md5sum /usr/local/share/wp-cli/wp-cli.phar | cut -b0-32)" != ${WP_CLI_MD5} ]]; then \
+    echo -e '\n\n' ; \
+    echo '*** *** *** *** *** *** *** *** ***' ; \
+    echo 'wp-cli.phar integrity check failed!' ; \
+    echo '*** *** *** *** *** *** *** *** ***' ; \
+    echo -e '\n\n' ; \
+    exit 1 ; \
+  fi ; \
+  apk add --no-cache sudo less ; \
+  echo 'export PAGER="less -R"' >/home/www-data/.profile; \
+  echo -e '#!/bin/sh\nsudo -u www-data -i -- php /usr/local/share/wp-cli/wp-cli.phar "$@"' >/usr/local/bin/wp ; \
+  chmod 755 /usr/local/bin/wp ; \
+}
