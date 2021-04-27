@@ -93,6 +93,7 @@ RUN { \
   fi ; \
   apk add --no-cache sudo less ; \
   echo 'export PAGER="less -R"' >/home/www-data/.profile; \
+	echo 'export WP_CLI_CACHE_DIR=/tmp/wp-cli-cache' >>/home/www-data/.profile; \
   echo -e '#!/bin/sh\nsudo -u www-data -i -- php /usr/local/share/wp-cli/wp-cli.phar --path=/var/www/html "$@"' >/usr/local/bin/wp ; \
   chmod 755 /usr/local/bin/wp ; \
 }
